@@ -1,5 +1,6 @@
 # Digital Image And Video Processing Lab - CUSAT
 
+<!--
 This repository contains solutions for the Digital Image Processing lab assignments at Cochin University of Science and Technology (CUSAT).
 
 ## Overview
