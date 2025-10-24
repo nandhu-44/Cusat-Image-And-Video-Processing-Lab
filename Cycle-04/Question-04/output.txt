@@ -1,0 +1,3 @@
+Baseline: 0.537 m
+Max disparity: 114.2
+Min depth (valid): 3.3 m

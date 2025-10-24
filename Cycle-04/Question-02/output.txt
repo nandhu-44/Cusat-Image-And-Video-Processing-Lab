@@ -1,0 +1,3 @@
+Max motion: 45.3 px
+Mean motion: 22.3 px
+Blocks: 1748

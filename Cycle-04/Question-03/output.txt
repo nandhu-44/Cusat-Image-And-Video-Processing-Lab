@@ -1,0 +1,2 @@
+Mean Absolute Error (MAE): 29.04
+Max Residual: 251.0
