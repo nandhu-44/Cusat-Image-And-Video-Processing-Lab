@@ -3,3 +3,4 @@ images/
 *.zip
 data/
 !output.txt
+*.test.py
