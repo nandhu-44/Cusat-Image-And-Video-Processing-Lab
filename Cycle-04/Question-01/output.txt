@@ -1,0 +1,2 @@
+Max motion magnitude: 151.17 px
+Mean motion magnitude: 17.27 px

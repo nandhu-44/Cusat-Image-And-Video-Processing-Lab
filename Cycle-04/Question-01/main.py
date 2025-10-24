@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load two consecutive grayscale frames
-prev = cv2.imread('./data/data_stereo_flow/training/image_1/000000_10.png', 0)    # t
-curr = cv2.imread('./data/data_stereo_flow/training/image_1/000000_11.png', 0)   # t+1
+prev = cv2.imread('../data/data_stereo_flow/training/image_1/000000_10.png', 0)    # t
+curr = cv2.imread('../data/data_stereo_flow/training/image_1/000000_11.png', 0)   # t+1
 
 # Compute dense optical flow
 flow = cv2.calcOpticalFlowFarneback(prev, curr, None,
@@ -33,3 +33,7 @@ plt.show()
 # Stats
 print(f"Max motion magnitude: {mag.max():.2f} px")
 print(f"Mean motion magnitude: {mag.mean():.2f} px")
+with open('output.txt', 'w') as f:
+    f.write(f"Max motion magnitude: {mag.max():.2f} px\n")
+    f.write(f"Mean motion magnitude: {mag.mean():.2f} px\n")
+plt.savefig('output.png', dpi=150, bbox_inches='tight')

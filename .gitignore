@@ -2,3 +2,4 @@
 images/
 *.zip
 data/
+!output.txt
