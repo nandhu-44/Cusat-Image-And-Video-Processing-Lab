@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;import os,sys,platform;(print("© Nandhu44 2025")or print("Ask Nandhu to run this for you 😉")or sys.exit(0))if(not os.getcwd().startswith(r"D:\Projects\DigitalImageProcessing")or platform.system()!="Windows")else None
-
+import matplotlib.pyplot as plt
 # Load consecutive frames (image_0 = left camera = temporal sequence)
 prev = cv2.imread('../data/data_stereo_flow/training/image_0/000000_10.png', 0)
 curr = cv2.imread('../data/data_stereo_flow/training/image_0/000000_11.png', 0)
