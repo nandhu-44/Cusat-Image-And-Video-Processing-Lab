@@ -33,13 +33,13 @@ titles = ['Original', 'Brightness (+50)', 'Contrast (x1.5)', 'Complement',
           'Bi-level (Binary)', 'Brightness Slicing', 'Low-pass (Blur)', 'High-pass (Laplacian)']
 images = [img, bright, contrast, comp, binary, slicing, low_pass, high_pass]
 
-plt.figure(figsize=(16, 8))
+plt.figure(figsize=(10, 10))
 for i in range(8):
-    plt.subplot(2, 4, i+1)
+    plt.subplot(3, 3, i+1)
     plt.imshow(images[i], cmap='gray')
     plt.title(titles[i])
     plt.axis('off')
 
-plt.tight_layout()
+plt.tight_layout(w_pad=0.1)
 plt.savefig('output.png')
 plt.show()
