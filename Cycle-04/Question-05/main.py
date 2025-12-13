@@ -45,7 +45,7 @@ overlay_dimmed[~obstacle_mask] = (overlay[~obstacle_mask].astype(np.uint16) * di
 cv2.imwrite('obstacle_overlay.png', result[:, :, ::-1])  # BGR → RGB
 cv2.imwrite('obstacle_overlay_dimmed.png', overlay_dimmed)
 
-fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+fig, ax = plt.subplots(2, 1, figsize=(10, 6))
 ax[0].imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
 ax[0].set_title(f'Obstacle Detection (Depth < {depth_threshold}m)')
 ax[0].axis('off')
@@ -54,7 +54,7 @@ ax[1].imshow(depth, cmap='magma')
 ax[1].set_title('Depth Map')
 ax[1].axis('off')
 
-plt.tight_layout()
+plt.tight_layout(pad=0, h_pad=0.5)
 plt.savefig('output.png', dpi=150, bbox_inches='tight')
 plt.show()
 
