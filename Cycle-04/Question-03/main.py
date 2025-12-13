@@ -47,21 +47,26 @@ residual_vis = np.clip(residual, 0, 255).astype(np.uint8)
 cv2.imwrite('predicted_frame.png', predicted.astype(np.uint8))
 cv2.imwrite('residual_image.png', residual_vis)
 
-# Plot: 3-panel
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-axes[0].imshow(curr.astype(np.uint8), cmap='gray')
-axes[0].set_title('Actual Frame (t+1)')
-axes[0].axis('off')
+# Plot: 4-panel
+fig, axes = plt.subplots(2, 2, figsize=(10, 5))
 
-axes[1].imshow(predicted.astype(np.uint8), cmap='gray')
-axes[1].set_title('Predicted Frame')
-axes[1].axis('off')
+axes[0, 0].imshow(prev.astype(np.uint8), cmap='gray')
+axes[0, 0].set_title('Previous Frame (t)')
+axes[0, 0].axis('off')
 
-axes[2].imshow(residual_vis, cmap='hot')
-axes[2].set_title('Residual (Abs Diff)')
-axes[2].axis('off')
+axes[0, 1].imshow(curr.astype(np.uint8), cmap='gray')
+axes[0, 1].set_title('Actual Frame (t+1)')
+axes[0, 1].axis('off')
 
-plt.tight_layout()
+axes[1, 0].imshow(predicted.astype(np.uint8), cmap='gray')
+axes[1, 0].set_title('Predicted Frame')
+axes[1, 0].axis('off')
+
+axes[1, 1].imshow(residual_vis, cmap='hot')
+axes[1, 1].set_title('Residual (Abs Diff)')
+axes[1, 1].axis('off')
+
+plt.tight_layout(pad=0.1)
 plt.savefig('output.png', dpi=150, bbox_inches='tight')
 plt.show()
 
