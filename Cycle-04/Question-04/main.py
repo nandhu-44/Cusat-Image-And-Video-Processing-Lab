@@ -40,7 +40,7 @@ depth_norm = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8
 cv2.imwrite('disparity.png', disp_norm)
 cv2.imwrite('depth.png', depth_norm)
 
-fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+fig, ax = plt.subplots(2, 1, figsize=(10, 6))
 ax[0].imshow(disp_norm, cmap='plasma')
 ax[0].set_title('Disparity Map')
 ax[0].axis('off')
@@ -49,7 +49,7 @@ ax[1].imshow(depth_norm, cmap='magma')
 ax[1].set_title('Depth Map')
 ax[1].axis('off')
 
-plt.tight_layout()
+plt.tight_layout(pad=0, h_pad=0.5)
 plt.savefig('output.png', dpi=150, bbox_inches='tight')
 plt.show()
 
