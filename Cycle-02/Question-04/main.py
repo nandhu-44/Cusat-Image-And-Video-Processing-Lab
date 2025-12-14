@@ -2,135 +2,52 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def read_image(image_path):
-    """Read an image from the given path"""
-    image = cv2.imread(image_path)
-    if image is None:
-        raise ValueError(f"Could not read image from {image_path}")
-    return image
+def load_kernel(filename):
+    return np.loadtxt(filename)
 
-def read_kernel_from_file(file_path):
-    """Read convolution kernel from ASCII text file"""
-    kernel = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            line = line.strip()
-            if line:
-                row = [float(x) for x in line.split()]
-                kernel.append(row)
-    return np.array(kernel, dtype=np.float32)
+def convolve(img, kernel):
+    return cv2.filter2D(img, -1, kernel)
 
-def convolution(image, kernel):
-    """Perform convolution operation"""
-    if len(image.shape) == 3:
-        # Convert to grayscale for simplicity
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    kernel_h, kernel_w = kernel.shape
-    pad_h, pad_w = kernel_h // 2, kernel_w // 2
-    
-    # Add padding
-    padded_image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
-    
-    # Initialize output
-    output = np.zeros_like(image, dtype=np.float64)
-    
-    # Perform convolution (flip kernel for true convolution)
-    flipped_kernel = np.flip(np.flip(kernel, 0), 1)
-    
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            roi = padded_image[i:i+kernel_h, j:j+kernel_w]
-            output[i, j] = np.sum(roi * flipped_kernel)
-    
-    return np.clip(output, 0, 255).astype(np.uint8)
+def correlate(img, kernel):
+    kernel_flipped = np.flip(kernel)
+    return cv2.filter2D(img, -1, kernel_flipped)
 
-def correlation(image, kernel):
-    """Perform correlation operation"""
-    if len(image.shape) == 3:
-        # Convert to grayscale for simplicity
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    kernel_h, kernel_w = kernel.shape
-    pad_h, pad_w = kernel_h // 2, kernel_w // 2
-    
-    # Add padding
-    padded_image = np.pad(image, ((pad_h, pad_h), (pad_w, pad_w)), mode='constant', constant_values=0)
-    
-    # Initialize output
-    output = np.zeros_like(image, dtype=np.float64)
-    
-    # Perform correlation (no kernel flipping)
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            roi = padded_image[i:i+kernel_h, j:j+kernel_w]
-            output[i, j] = np.sum(roi * kernel)
-    
-    return np.clip(output, 0, 255).astype(np.uint8)
+def create_kernel_file(size, filename):
+    kernel = np.ones((size, size)) / (size * size)
+    np.savetxt(filename, kernel, fmt='%.6f')
 
-def test_kernels(image):
-    """Test the three required averaging kernels"""
-    kernel_files = [
-        'kernel_3x3_avg.txt',
-        'kernel_7x7_avg.txt',
-        'kernel_11x11_avg.txt'
-    ]
-    
-    plt.figure(figsize=(15, 10))
-    
-    # Original image
-    plt.subplot(2, 4, 1)
-    if len(image.shape) == 3:
-        plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    else:
-        plt.imshow(image, cmap='gray')
-    plt.title('Original Image')
+create_kernel_file(3, 'kernel_3x3.txt')
+create_kernel_file(7, 'kernel_7x7.txt')
+create_kernel_file(11, 'kernel_11x11.txt')
+
+img = cv2.imread('../images/lena.jpg', cv2.IMREAD_GRAYSCALE)
+
+k3 = load_kernel('kernel_3x3.txt')
+k7 = load_kernel('kernel_7x7.txt')
+k11 = load_kernel('kernel_11x11.txt')
+
+results = [
+    ('Original', img),
+    ('Convolve 3x3', convolve(img, k3)),
+    ('Correlate 3x3', correlate(img, k3)),
+    ('Convolve 7x7', convolve(img, k7)),
+    ('Correlate 7x7', correlate(img, k7)),
+    ('Convolve 11x11', convolve(img, k11)),
+    ('Correlate 11x11', correlate(img, k11))
+]
+
+plt.figure(figsize=(12, 10))
+for i, (title, result) in enumerate(results):
+    plt.subplot(3, 3, i+1)
+    plt.imshow(result, cmap='gray')
+    plt.title(title)
     plt.axis('off')
-    
-    for i, kernel_file in enumerate(kernel_files):
-        # Read kernel
-        kernel = read_kernel_from_file(kernel_file)
-        print(f"\nKernel from {kernel_file}:")
-        print(f"Size: {kernel.shape}")
-        print(f"Sum: {np.sum(kernel):.6f}")
-        
-        # Apply convolution and correlation
-        conv_result = convolution(image, kernel)
-        corr_result = correlation(image, kernel)
-        
-        # Display convolution result
-        plt.subplot(2, 4, i + 2)
-        plt.imshow(conv_result, cmap='gray')
-        plt.title(f'Convolution\n{kernel.shape[0]}×{kernel.shape[1]} Avg')
-        plt.axis('off')
-        
-        # Display correlation result
-        plt.subplot(2, 4, i + 6)
-        plt.imshow(corr_result, cmap='gray')
-        plt.title(f'Correlation\n{kernel.shape[0]}×{kernel.shape[1]} Avg')
-        plt.axis('off')
-    
-    plt.suptitle('Image Convolution and Correlation with Averaging Kernels', fontsize=14)
-    plt.tight_layout()
-    plt.show()
 
-def main():
-    # Read elephant image
-    try:
-        print("Reading elephant image...")
-        image = read_image("../images/elephant.jpg")
-        print("Image loaded successfully!")
-    except:
-        print("Could not read elephant image. Please ensure elephant.jpg is in ../images/ folder")
-        return
-    
-    print(f"Image dimensions: {image.shape}")
-    
-    # Test with the required kernels
-    test_kernels(image)
-    
-    print("\nConvolution vs Correlation completed!")
-    print("Note: For symmetric kernels like averaging, convolution and correlation give similar results.")
+# Adjust layout to minimize whitespace
+plt.subplots_adjust(left=0.02, right=0.98, top=0.95, bottom=0.02, wspace=0.05, hspace=0.1)
+plt.savefig('output.png', dpi=150, bbox_inches='tight')
+plt.show()
 
-if __name__ == "__main__":
-    main()
+print(f"Kernel 3x3: \n{k3}" )
+print(f"\nKernel 7x7: \n{k7}")
+print(f"\nKernel 11x11: \n{k11}")
