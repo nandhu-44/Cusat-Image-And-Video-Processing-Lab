@@ -1,67 +1,75 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
-# Load the image and resize to 256x256 if necessary
-image = cv2.imread('../images/lena.jpg', cv2.IMREAD_GRAYSCALE)
-image = cv2.resize(image, (256, 256))
+# Load image
+img = cv2.imread('../images/elephant.jpg', cv2.IMREAD_GRAYSCALE)
+img = cv2.resize(img, (256, 256))
 
-# Check if image is loaded
-if image is None:
-    print("Error: Image not found.")
-    exit()
-
-# Convert to float32
-image_float = np.float32(image)
-
-# Function to perform DFT filtering
-def dft_filter(img, pad=False):
-    if pad:
-        # Pad to 512x512
-        padded = cv2.copyMakeBorder(img, 0, 256, 0, 256, cv2.BORDER_CONSTANT, value=0)
+def apply_dft_filter(image, use_padding=False):
+    rows, cols = image.shape
+    
+    if use_padding:
+        # Pad to optimal size (usually double for convolution to avoid wraparound)
+        # Here we pad to 512x512
+        m = cv2.getOptimalDFTSize(rows * 2)
+        n = cv2.getOptimalDFTSize(cols * 2)
+        padded = cv2.copyMakeBorder(image, 0, m - rows, 0, n - cols, cv2.BORDER_CONSTANT, value=0)
     else:
-        padded = img
-
-    # Perform DFT
-    dft = cv2.dft(padded, flags=cv2.DFT_COMPLEX_OUTPUT)
+        padded = image
+        
+    # DFT
+    dft = cv2.dft(np.float32(padded), flags=cv2.DFT_COMPLEX_OUTPUT)
     dft_shift = np.fft.fftshift(dft)
-
-    # Create a low-pass filter mask (simple circular)
-    rows, cols = padded.shape
-    crow, ccol = rows//2, cols//2
-    mask = np.zeros((rows, cols, 2), np.uint8)
-    r = 50  # radius
-    center = [crow, ccol]
-    x, y = np.ogrid[:rows, :cols]
-    mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+    
+    # Create Low Pass Filter Mask
+    p_rows, p_cols = padded.shape
+    crow, ccol = p_rows // 2, p_cols // 2
+    
+    # Create a mask, center square is 1, remaining all zeros
+    mask = np.zeros((p_rows, p_cols, 2), np.uint8)
+    r = 30 # Radius for LPF
+    
+    # Circular mask
+    y, x = np.ogrid[:p_rows, :p_cols]
+    mask_area = (x - ccol)**2 + (y - crow)**2 <= r*r
     mask[mask_area] = 1
-
+    
     # Apply mask
     fshift = dft_shift * mask
-
+    
     # Inverse DFT
     f_ishift = np.fft.ifftshift(fshift)
     img_back = cv2.idft(f_ishift)
-    img_back = cv2.magnitude(img_back[:, :, 0], img_back[:, :, 1])
-
-    # Normalize
+    img_back = cv2.magnitude(img_back[:,:,0], img_back[:,:,1])
+    
+    # Crop back if padded
+    if use_padding:
+        img_back = img_back[0:rows, 0:cols]
+        
+    # Normalize to 0-255
     cv2.normalize(img_back, img_back, 0, 255, cv2.NORM_MINMAX)
-    img_back = np.uint8(img_back)
+    return img_back.astype(np.uint8)
 
-    if pad:
-        # Crop back to 256x256
-        img_back = img_back[:256, :256]
+# Apply filters
+res_no_pad = apply_dft_filter(img, use_padding=False)
+res_pad = apply_dft_filter(img, use_padding=True)
 
-    return img_back
+# Visualization
+results = [
+    ('Original', img),
+    ('DFT No Padding', res_no_pad),
+    ('DFT With Padding', res_pad)
+]
 
-# Without padding
-filtered_no_pad = dft_filter(image_float, pad=False)
+plt.figure(figsize=(12, 4))
+for i, (title, result) in enumerate(results):
+    plt.subplot(1, 3, i+1)
+    plt.imshow(result, cmap='gray')
+    plt.title(title)
+    plt.axis('off')
 
-# With padding
-filtered_pad = dft_filter(image_float, pad=True)
-
-# Display results
-cv2.imshow('Original', image)
-cv2.imshow('Filtered without padding', filtered_no_pad)
-cv2.imshow('Filtered with padding', filtered_pad)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# Minimal whitespace layout
+plt.subplots_adjust(left=0.02, right=0.98, top=0.85, bottom=0.02, wspace=0.05)
+plt.savefig('output.png', dpi=150, bbox_inches='tight')
+plt.show()
