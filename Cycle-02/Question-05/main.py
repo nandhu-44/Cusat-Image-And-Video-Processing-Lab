@@ -2,86 +2,60 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def add_salt_pepper_noise(image, salt_prob=0.05, pepper_prob=0.05):
-    noisy_image = image.copy().astype(np.float32)
+def add_salt_pepper_noise(img, salt_prob=0.02, pepper_prob=0.02):
+    noisy = img.copy()
+    total_pixels = img.size
     
-    if len(image.shape) == 3:
-        # For color images, apply noise to each channel
-        for channel in range(image.shape[2]):
-            random_matrix = np.random.random(image.shape[:2])
-            salt_mask = random_matrix < salt_prob
-            pepper_mask = random_matrix > (1 - pepper_prob)
-            noisy_image[:, :, channel][salt_mask] = 255
-            noisy_image[:, :, channel][pepper_mask] = 0
-    else:
-        random_matrix = np.random.random(noisy_image.shape)
-        salt_mask = random_matrix < salt_prob
-        pepper_mask = random_matrix > (1 - pepper_prob)
-        noisy_image[salt_mask] = 255
-        noisy_image[pepper_mask] = 0
+    num_salt = int(total_pixels * salt_prob)
+    salt_coords = [np.random.randint(0, i, num_salt) for i in img.shape]
+    noisy[tuple(salt_coords)] = 255
     
-    return noisy_image.astype(np.uint8)
+    num_pepper = int(total_pixels * pepper_prob)
+    pepper_coords = [np.random.randint(0, i, num_pepper) for i in img.shape]
+    noisy[tuple(pepper_coords)] = 0
+    
+    return noisy
 
-def median_filter(image, kernel_size=3):
-    pad_size = kernel_size // 2
-    
-    if len(image.shape) == 3:
-        # For color images, apply filter to each channel
-        filtered_image = np.zeros_like(image)
-        for channel in range(image.shape[2]):
-            padded_channel = np.pad(image[:, :, channel], pad_size, mode='edge')
-            for i in range(image.shape[0]):
-                for j in range(image.shape[1]):
-                    neighborhood = padded_channel[i:i+kernel_size, j:j+kernel_size]
-                    filtered_image[i, j, channel] = np.median(neighborhood)
-    else:
-        padded_image = np.pad(image, pad_size, mode='edge')
-        filtered_image = np.zeros_like(image)
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
-                neighborhood = padded_image[i:i+kernel_size, j:j+kernel_size]
-                filtered_image[i, j] = np.median(neighborhood)
-    
-    return filtered_image.astype(np.uint8)
+def median_filter(img, kernel_size):
+    return cv2.medianBlur(img, kernel_size)
 
-def main():
-    image = cv2.imread("../images/lena.jpg")
-    original = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
-    noisy_image = add_salt_pepper_noise(original)
-    filtered_3x3 = median_filter(noisy_image, 3)
-    filtered_7x7 = median_filter(noisy_image, 7)
-    filtered_11x11 = median_filter(noisy_image, 11)
-    
-    plt.figure(figsize=(15, 10))
-    
-    plt.subplot(2, 3, 1)
-    plt.imshow(original)
-    plt.title('Original')
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 2)
-    plt.imshow(noisy_image)
-    plt.title('Salt & Pepper Noise')
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 4)
-    plt.imshow(filtered_3x3)
-    plt.title('Median Filter 3x3')
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 5)
-    plt.imshow(filtered_7x7)
-    plt.title('Median Filter 7x7')
-    plt.axis('off')
-    
-    plt.subplot(2, 3, 6)
-    plt.imshow(filtered_11x11)
-    plt.title('Median Filter 11x11')
-    plt.axis('off')
-    
-    plt.tight_layout()
-    plt.show()
+img = cv2.imread('../images/elephant.jpg', cv2.IMREAD_GRAYSCALE)
 
-if __name__ == "__main__":
-    main()
+noisy = add_salt_pepper_noise(img, 0.05, 0.05)
+
+median3 = median_filter(noisy, 3)
+median5 = median_filter(noisy, 5)
+median7 = median_filter(noisy, 7)
+
+mean3 = cv2.blur(noisy, (3, 3))
+mean5 = cv2.blur(noisy, (5, 5))
+
+results = [
+    ('Original', img),
+    ('Salt & Pepper Noise', noisy),
+    ('Median 3x3', median3),
+    ('Median 5x5', median5),
+    ('Median 7x7', median7),
+    ('Mean 3x3 (Compare)', mean3),
+    ('Mean 5x5 (Compare)', mean5)
+]
+
+plt.figure(figsize=(12, 10))
+for i, (title, result) in enumerate(results):
+    plt.subplot(3, 3, i+1)
+    plt.imshow(result, cmap='gray')
+    plt.title(title)
+    plt.axis('off')
+
+# Adjust layout to minimize whitespace
+plt.subplots_adjust(left=0.02, right=0.98, top=0.95, bottom=0.02, wspace=0.05, hspace=0.1)
+plt.savefig('output.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+psnr_median3 = cv2.PSNR(img, median3)
+psnr_median5 = cv2.PSNR(img, median5)
+psnr_mean3 = cv2.PSNR(img, mean3)
+
+print(f"PSNR Median 3x3: {psnr_median3:.2f} dB")
+print(f"PSNR Median 5x5: {psnr_median5:.2f} dB")
+print(f"PSNR Mean 3x3: {psnr_mean3:.2f} dB")
