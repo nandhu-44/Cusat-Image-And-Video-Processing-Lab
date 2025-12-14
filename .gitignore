@@ -1,5 +1,5 @@
 # *.txt
-images/
+# images/
 *.zip
 data/
 !output.txt
